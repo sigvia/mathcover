@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>数学 2次記述対策 錬成問題集</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre']},startup:{typeset:false}};</script><script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            }
+        };
+    </script>
+
+    <script
+        id="MathJax-script"
+        async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script> -->
+
+   <link rel="icon" href="favicon.ico" type="image/x-icon">
+    
+</head>
+    
+
+<body>
+
+    <h1>数学 二次記述対策 錬成問題集</h1>
+
+
+    <!-- =========================================================
+         演習シミュレーター
+         ========================================================= -->
+
+    <div class="test-master-panel">
+
+        <h2 class="test-title">
+            ⚔️ 演習シミュレーター
+        </h2>
+
+        <p
+            class="test-description"
+            id="test-description-text">
+            現在メニューで選択中の範囲から、指定された問題数で記述即応テストを自動的に生成します
+        </p>
+
+
+        <!-- 問題数設定 -->
+
+        <div
+            class="test-config-row"
+            id="test-config-panel">
+
+            <label for="test-question-count">
+                📋 出題問題数:
+            </label>
+
+            <input
+                type="number"
+                id="test-question-count"
+                value="5"
+                min="1"
+                max="30"
+                step="1">
+
+            <span class="max-question-text">
+                問
+                (最大:
+                <span id="max-q-count">0</span>
+                問)
+            </span>
+
+        </div>
+
+
+        <!-- テスト開始 -->
+
+        <div
+            class="dynamic-test-launcher"
+            id="launcher-wrapper">
+
+            <button
+                class="test-action-btn"
+                id="dynamic-start-btn"
+                type="button"
+                onclick="triggerEngineByContext()">
+
+                🌍 全分野から総合問題テストを開始
+
+            </button>
+
+        </div>
+
+
+        <!-- テスト中HUD -->
+
+        <div
+            class="test-hud"
+            id="test-hud-panel">
+
+            <div
+                class="timer-display"
+                id="test-timer">
+
+                ⏱️ 00:00
+
+            </div>
+
+            <div
+                class="question-slots"
+                id="dynamic-slots-container">
+            </div>
+
+        </div>
+
+
+        <!-- テスト本体 -->
+
+        <div
+            class="test-workspace"
+            id="test-workspace-area">
+
+            <div class="test-q-card">
+
+                <div class="test-question-header">
+
+                    <strong id="test-q-index">
+                        第 1 問
+                    </strong>
+
+                    <div id="test-q-badge"></div>
+
+                </div>
+
+
+                <div
+                    class="question-text"
+                    id="test-q-text">
+
+                    問題が生成されます
+
+                </div>
+
+
+                <div
+                    class="choices-container"
+                    id="test-choices-zone">
+                </div>
+
+            </div>
+
+
+            <!-- 問題移動 -->
+
+            <div class="test-nav-actions">
+
+                <button
+                    class="nav-btn"
+                    id="nav-prev-btn"
+                    type="button"
+                    onclick="moveTestQuestion(-1)">
+
+                    ⬅️ 前の問題
+
+                </button>
+
+                <button
+                    class="nav-btn primary"
+                    id="nav-next-btn"
+                    type="button"
+                    onclick="moveTestQuestion(1)">
+
+                    次の問題 ➡️
+
+                </button>
+
+                <button
+                    class="nav-btn finish"
+                    id="nav-submit-btn"
+                    type="button"
+                    onclick="finishAndGradeTest()">
+
+                    📥 演習を終了して一括採点
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- 結果画面 -->
+
+        <div
+            class="final-score-sheet"
+            id="final-score-area">
+
+            <div
+                class="score-headline"
+                id="score-headline-text">
+
+                演習終了
+
+            </div>
+
+            <div id="review-list-zone"></div>
+
+            <button
+                class="test-action-btn"
+                id="reset-test-btn"
+                type="button"
+                onclick="resetTestSystem()">
+
+                メニュー画面に戻る
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================================
+         メインナビゲーション
+         ========================================================= -->
+
+    <div id="main-navigation-menu">
+
+        <div class="subject-menu">
+
+            <div
+                class="subject-btn"
+                id="sub-1a"
+                onclick="selectSubject('1a')">
+
+                数学Ⅰ・A
+
+            </div>
+
+            <div
+                class="subject-btn"
+                id="sub-2b"
+                onclick="selectSubject('2b')">
+
+                数学Ⅱ・B
+
+            </div>
+
+            <div
+                class="subject-btn"
+                id="sub-3c"
+                onclick="selectSubject('3c')">
+
+                数学Ⅲ・C
+
+            </div>
+
+            <div
+                class="subject-btn"
+                id="sub-all"
+                onclick="selectSubject('all')">
+
+                数学総合問題
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             数学Ⅰ・A
+             ===================================================== -->
+
+        <div
+            id="fields-1a"
+            class="field-container">
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-1"
+                onclick="selectField('sec-1a-1','fbtn-1a-1','数と式')">
+
+                数と式
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-2"
+                onclick="selectField('sec-1a-2','fbtn-1a-2','集合と命題')">
+
+                集合と命題
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-3"
+                onclick="selectField('sec-1a-3','fbtn-1a-3','2次関数')">
+
+                2次関数
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-4"
+                onclick="selectField('sec-1a-4','fbtn-1a-4','図形と計量')">
+
+                図形と計量
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-5"
+                onclick="selectField('sec-1a-5','fbtn-1a-5','データの分析')">
+
+                データの分析
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-6"
+                onclick="selectField('sec-1a-6','fbtn-1a-6','場合の数')">
+
+                場合の数
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-7"
+                onclick="selectField('sec-1a-7','fbtn-1a-7','確率')">
+
+                確率
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-8"
+                onclick="selectField('sec-1a-8','fbtn-1a-8','図形の性質')">
+
+                図形の性質
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-9"
+                onclick="selectField('sec-1a-9','fbtn-1a-9','数学と人間の活動')">
+
+                数学と人間の活動
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-1a-10"
+                onclick="selectField('sec-1a-10','fbtn-1a-10','数1A総合問題')">
+
+                数1A総合問題
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             数学Ⅱ・B
+             ===================================================== -->
+
+        <div
+            id="fields-2b"
+            class="field-container">
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-1"
+                onclick="selectField('sec-2b-1','fbtn-2b-1','式と証明')">
+
+                式と証明
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-2"
+                onclick="selectField('sec-2b-2','fbtn-2b-2','複素数と方程式')">
+
+                複素数と方程式
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-3"
+                onclick="selectField('sec-2b-3','fbtn-2b-3','図形と方程式')">
+
+                図形と方程式
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-4"
+                onclick="selectField('sec-2b-4','fbtn-2b-4','三角関数')">
+
+                三角関数
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-5"
+                onclick="selectField('sec-2b-5','fbtn-2b-5','指数関数と対数関数')">
+
+                指数関数と対数関数
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-6"
+                onclick="selectField('sec-2b-6','fbtn-2b-6','微分法')">
+
+                微分法
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-7"
+                onclick="selectField('sec-2b-7','fbtn-2b-7','積分法')">
+
+                積分法
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-8"
+                onclick="selectField('sec-2b-8','fbtn-2b-8','数列')">
+
+                数列
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-9"
+                onclick="selectField('sec-2b-9','fbtn-2b-9','統計的な推測')">
+
+                統計的な推測
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-2b-10"
+                onclick="selectField('sec-2b-10','fbtn-2b-10','数2B総合問題')">
+
+                数2B総合問題
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             数学Ⅲ・C
+             ===================================================== -->
+
+        <div
+            id="fields-3c"
+            class="field-container">
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-1"
+                onclick="selectField('sec-3c-1','fbtn-3c-1','極限')">
+
+                極限
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-2"
+                onclick="selectField('sec-3c-2','fbtn-3c-2','微分法')">
+
+                微分法
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-3"
+                onclick="selectField('sec-3c-3','fbtn-3c-3','積分法')">
+
+                積分法
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-4"
+                onclick="selectField('sec-3c-4','fbtn-3c-4','ベクトル')">
+
+                ベクトル
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-5"
+                onclick="selectField('sec-3c-5','fbtn-3c-5','複素数平面')">
+
+                複素数平面
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-6"
+                onclick="selectField('sec-3c-6','fbtn-3c-6','式と曲線')">
+
+                式と曲線
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-7"
+                onclick="selectField('sec-3c-7','fbtn-3c-7','行列')">
+
+                行列
+
+            </div>
+
+            <div
+                class="field-btn"
+                id="fbtn-3c-8"
+                onclick="selectField('sec-3c-8','fbtn-3c-8','数3C総合問題')">
+
+                数3C総合問題
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =====================================================
+             数学総合
+             ===================================================== -->
+
+        <div
+            id="fields-all"
+            class="content-section">
+
+            <div class="placeholder-text">
+                数学総合問題は準備中です
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =========================================================
+         問題セクション
+         
+         ↓↓↓
+         ここに今まで使っていた問題カードをコピペ
+         ↓↓↓
+         ========================================================= -->
+
+
+    <!-- 数学Ⅰ・A -->
+
+    <div
+        id="sec-1a-1"
+        class="content-section">
+        <!-- 数と式の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-2"
+        class="content-section">
+        <!-- 集合と命題の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-3"
+        class="content-section">
+        <!-- 2次関数の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-4"
+        class="content-section">
+        <!-- 図形と計量の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-5"
+        class="content-section">
+        <!-- データの分析の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-6"
+        class="content-section">
+        <!-- 場合の数の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-7"
+        class="content-section">
+        <!-- 確率の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-8"
+        class="content-section">
+        <!-- 図形の性質の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-9"
+        class="content-section">
+        <!-- 数学と人間の活動の問題をここにコピペ -->
+    </div>
+
+    <div
+        id="sec-1a-10"
+        class="content-section">
+        <!-- 数1A総合問題をここにコピペ -->
+    </div>
+
+
+
+    <!-- 数学Ⅱ・B -->
+
+    <div
+        id="sec-2b-1"
+        class="content-section">
+        <!-- 式と証明 -->
+    </div>
+
+    <div
+        id="sec-2b-2"
+        class="content-section">
+        <!-- 複素数と方程式 -->
+    </div>
+
+    <div
+        id="sec-2b-3"
+        class="content-section">
+        <!-- 図形と方程式 -->
+    </div>
+
+    <div
+        id="sec-2b-4"
+        class="content-section">
+        <!-- 三角関数 -->
+    </div>
+
+    <div
+        id="sec-2b-5"
+        class="content-section">
+        <!-- 指数関数と対数関数 -->
+    </div>
+
+    <div
+        id="sec-2b-6"
+        class="content-section">
+        <!-- 微分法 -->
+    </div>
+
+    <div id="sec-2b-7" class="content-section">
+        <!-- 積分法 -->
+    </div>
+
+    <div id="sec-2b-8" class="content-section">
+        <!-- 数列 -->
+        
+<div class="question-card" data-ans="\(a_n=2^{n-3}(n^2-3n+6)\)" data-wrong="\(a_n=2^{n-1}+n2^{n-2}\)|\(a_n=2^{n-2}(n^2-2n+2)\)|\(a_n=2^{n-3}(n^2-3n+4)\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">数列 \(\{a_n\}\) を \(a_1=1,\quad a_2=2,\quad a_{n+2}=4a_{n+1}-4a_n+2^n\) によって定めるとき、一般項 \(a_n\) を求めよ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle a_n=2^{n-3}(n^2-3n+6)\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>まず、与えられた漸化式をそのまま扱うのではなく、\(a_{n+1}-2a_n\) という形を作ることを考える 与えられた漸化式 \(a_{n+2}=4a_{n+1}-4a_n+2^n\) を整理すると、\(a_{n+2}-2a_{n+1}=2(a_{n+1}-2a_n)+2^n\) となる</p>
+        <p>そこで \(b_n=a_{n+1}-2a_n\) とおくと、\(b_{n+1}=2b_n+2^n\) となる また、\(b_1=a_2-2a_1=2-2=0\) である</p>
+        <p>ここで \(2^n\) が含まれているので、\(c_n=\displaystyle\frac{b_n}{2^n}\) とおく \(b_n=2^nc_n\) を代入すると、\(2^{n+1}c_{n+1}=2\cdot2^nc_n+2^n\) より、\(c_{n+1}=c_n+\displaystyle\frac12\) となる</p>
+        <p>\(c_1=\displaystyle\frac{b_1}{2}=0\) なので、\(c_n=\displaystyle\frac{n-1}{2}\) である よって \(b_n=2^nc_n=(n-1)2^{n-1}\) となる \(b_n=a_{n+1}-2a_n\) だったので、\(a_{n+1}-2a_n=(n-1)2^{n-1}\) を得る</p>
+        <p>ここでも \(2^n\) が含まれているので、今度は \(d_n=\displaystyle\frac{a_n}{2^n}\) とおく \(a_n=2^nd_n\) を代入すると、\(2^{n+1}d_{n+1}-2\cdot2^nd_n=(n-1)2^{n-1}\) となる</p>
+        <p>両辺を \(2^{n-1}\) で割ると、\(4d_{n+1}-4d_n=n-1\) より、\(d_{n+1}-d_n=\displaystyle\frac{n-1}{4}\) となる</p>
+        <p>\(d_1=\displaystyle\frac{a_1}{2}=\displaystyle\frac12\) なので、\(d_n=\displaystyle\frac12+\frac14(0+1+\cdots +(n-2))\) となる \(0+1+\cdots +(n-2)=\displaystyle\frac{(n-2)(n-1)}2\) より、\(d_n=\displaystyle\frac12+\frac{(n-2)(n-1)}8=\displaystyle\frac{n^2-3n+6}{8}\) である</p>
+        <p>最後に \(d_n=\displaystyle\frac{a_n}{2^n}\) だったので、\(a_n=2^nd_n=2^n\displaystyle\frac{n^2-3n+6}{8}\) となる したがって、\[\displaystyle a_n=2^{n-3}(n^2-3n+6)\] である</p>
+    </div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle 2-\frac{1}{n}\)" data-wrong="\(\displaystyle 1-\frac{1}{n}\)|\(\displaystyle 2+\frac{1}{n}\)|\(\displaystyle\frac{n}{n+1}\)" data-subject="2b">
+<div class="question-header"></div>
+<div class="question-text">数列 \(\{a_n\}\) を \(a_1=1,\ a_{n+1}-a_n=\displaystyle\frac{1}{n(n+1)}\) によって定めるとき、\(a_n\) の一般項を求めよ</div>
+<button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+<div class="answer-box">
+<div class="answer-title">【解答】</div>
+<div class="ans-highlight">\(\displaystyle a_n=2-\frac1n\)</div>
+<div class="commentary-title">【解説】</div>
+<p>まず、</p>
+<p>\(\displaystyle\frac1{n(n+1)}=\frac1n-\frac1{n+1}\)</p>
+<p>と変形する</p>
+<p>漸化式を \(k=1\) から \(k=n-1\) まで加えると、</p>
+<p>\(\displaystyle a_n-a_1=\sum_{k=1}^{n-1}(a_{k+1}-a_k)\)</p>
+<p>したがって、</p>
+<p>\(\displaystyle a_n=1+\sum_{k=1}^{n-1}\left(\frac1k-\frac1{k+1}\right)\)</p>
+<p>この和を展開すると、</p>
+<p>\(\displaystyle a_n=1+\left(1-\frac12\right)+\left(\frac12-\frac13\right)+\cdots+\left(\frac1{n-1}-\frac1n\right)\)</p>
+<p>途中の項がすべて打ち消し合うので、</p>
+<p>\(\displaystyle a_n=1+1-\frac1n\)</p>
+<p>よって、</p>
+<p>\(\displaystyle a_n=2-\frac1n\)</p>
+</div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle 2^n-n-1\)" data-wrong="\(\displaystyle 2^n-n\)|\(\displaystyle 2^{n-1}+n-1\)|\(\displaystyle 2^n+n-1\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">数列 \(\{a_n\}\) を \(a_1=0,\ a_{n+1}=2a_n+n\) によって定めるとき、\(a_n\) の一般項を求めよ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle a_n=2^n-n-1\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>与えられた漸化式は、</p>
+        <p>\(\displaystyle a_{n+1}=2a_n+n　　⋯①\)</p>
+        <p>である</p>
+        <p>ここで、\(n\) を消すために \(n+1\) 回目の式から \(n\) 回目の式を引く方法を考える</p>
+        <p>まず、\(a_{2}=2\cdot0+1=1\) であり、\(n+1\)を代入すると、</p>
+        <p>\(\displaystyle a_{n+2}=2a_{n+1}+n+1　　⋯②\)</p>
+        <p>②-①より</p>
+        <p>\(\displaystyle a_{n+2}-a_{n+1}=2(a_{n+1}-a_{n})\)</p>
+        <p>\(\displaystyle a_{n+1}-a_{n}\)を\(b_n\)と置くと</p>
+        <p>\(\displaystyle b_{n+1}=2b_{n}+1\)</p>
+        <p>\(\displaystyle b_{n+1}+1=2(b_{n}+1)\)</p>
+        <p>\(b_1=a_{2}-a_{1}=1\) であるから</p>
+        <p>\(\displaystyle b_{1}+1=2\)より\(\displaystyle b_{n}+1=2^n\)</p>
+        <p>\(\displaystyle b_{n}=2^{n}-1\)</p>
+        <p>よって\(a_{n+1}-a_{n}=2^{n}-1\)</p>
+        <p>これは階差が\(2^n-1\)の階差数列である</p>
+        <p>したがって、\(\displaystyle a_{n}=a_{1}+\sum_{k=1}^{n-1}(2^k-1)\)</p>
+        <p>\(\displaystyle a_{n}=0+\sum_{k=1}^{n-1}2^k-\sum_{k=1}^{n-1}1\)</p>
+        <p>\(\displaystyle =2(2^{n-1}-1)-(n-1)=2^{n}-n-1\)</p>
+        <p>よって\(\displaystyle a_n=2^n-n-1\)</p>
+    </div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle a_n=\frac{n(n+1)}2,\qquad\sum_{k=1}^{n}a_k=\frac{n(n+1)(n+2)}6\)" data-wrong="\(\displaystyle a_n=n^2,\qquad\sum_{k=1}^{n}a_k=\frac{n(n+1)(2n+1)}6\)|\(\displaystyle a_n=\frac{n(n-1)}2,\qquad\sum_{k=1}^{n}a_k=\frac{n(n+1)}2\)|\(\displaystyle a_n=2n^2+n,\qquad\sum_{k=1}^{n}a_k=\frac{n(n+1)(n+2)}3\)" data-subject="2b">
+<div class="question-header"></div>
+<div class="question-text">数列 \(\{a_n\}\) を \(a_1=1,\ a_{n+1}=a_n+n+1\) によって定めるとき、\(a_n\) の一般項と \(\displaystyle\sum_{k=1}^{n}a_k\) を求めよ</div>
+<button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+<div class="answer-box">
+<div class="answer-title">【解答】</div>
+<div class="ans-highlight">\(\displaystyle a_n=\frac{n(n+1)}2,\qquad\sum_{k=1}^{n}a_k=\frac{n(n+1)(n+2)}6\)</div>
+<div class="commentary-title">【解説】</div>
+<p>まず、</p>
+<p>\(\displaystyle a_{n+1}-a_n=n+1\)</p>
+<p>なので、\(a_1=1\) から順に加えると、</p>
+<p>\(\displaystyle a_n=1+\sum_{k=1}^{n-1}(k+1)\)</p>
+<p>ここで、</p>
+<p>\(\displaystyle\sum_{k=1}^{n-1}(k+1)=\sum_{k=1}^{n-1}k+(n-1)\)</p>
+<p>だから、</p>
+<p>\(\displaystyle a_n=1+\frac{n(n-1)}2+n-1\)</p>
+<p>整理すると、</p>
+<p>\(\displaystyle a_n=\frac{n(n+1)}2\)</p>
+<p>次に、</p>
+<p>\(\displaystyle\sum_{k=1}^{n}a_k=\frac12\sum_{k=1}^{n}(k^2+k)\)</p>
+<p>公式 \(\displaystyle\sum_{k=1}^{n}k^2=\frac{n(n+1)(2n+1)}6\)、\(\displaystyle\sum_{k=1}^{n}k=\frac{n(n+1)}2\) を使う</p>
+<p>したがって、</p>
+<p>\(\displaystyle\sum_{k=1}^{n}a_k=\frac12\left\{\frac{n(n+1)(2n+1)}6+\frac{n(n+1)}2\right\}\)</p>
+<p>整理すると、</p>
+<p>\(\displaystyle\boxed{\sum_{k=1}^{n}a_k=\frac{n(n+1)(n+2)}6}\)</p>
+</div>
+</div>
+
+
+<div class="question-card" data-ans="\(a_n^2>2n\)" data-wrong="\(a_n^2>n\)|\(a_n^2>3n\)|\(a_n^2>2n+1\)" data-subject="2b">
+<div class="question-header"></div>
+<div class="question-text">数列 \(\{a_n\}\) を \(a_1=2,\ a_{n+1}=a_n+\displaystyle\frac1{a_n}\) によって定めるとき、すべての正整数 \(n\) に対して \(a_n^2>2n\) が成り立つことを示せ</div>
+<button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+<div class="answer-box">
+<div class="answer-title">【解答】</div>
+<div class="ans-highlight">\(\displaystyle a_n^2>2n\)</div>
+<div class="commentary-title">【解説】</div>
+<p>数学的帰納法を用いる</p>
+<p>まず \(n=1\) のとき、</p>
+<p>\(\displaystyle a_1^2=4>2\)</p>
+<p>なので成立する</p>
+<p>次に、ある正整数 \(n\) について \(a_n^2>2n\) が成立すると仮定する</p>
+<p>漸化式を2乗すると、</p>
+<p>\(\displaystyle a_{n+1}^2=\left(a_n+\frac1{a_n}\right)^2=a_n^2+2+\frac1{a_n^2}\)</p>
+<p>ここで \(\displaystyle\frac1{a_n^2}>0\) なので、</p>
+<p>\(\displaystyle a_{n+1}^2>a_n^2+2\)</p>
+<p>仮定 \(a_n^2>2n\) を使えば、</p>
+<p>\(\displaystyle a_{n+1}^2>2n+2=2(n+1)\)</p>
+<p>したがって \(n+1\) の場合にも成立する</p>
+<p>以上より、数学的帰納法によって、すべての正整数 \(n\) について、</p>
+<p>\(\displaystyle\boxed{a_n^2>2n}\)</p>
+<p>が成り立つ</p>
+</div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle 4-\frac{n+2}{2^{n-1}}\)" data-wrong="\(\displaystyle 4-\frac{n+1}{2^{n-1}}\)|\(\displaystyle 4-\frac{n+2}{2^n}\)|\(\displaystyle 2-\frac{n+2}{2^{n-1}}\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">数列 \(\{a_n\}\) を \(a_1=1,\ a_{n+1}=2a_n\) によって定める<br>このとき、\(\displaystyle S_n=\sum_{k=1}^{n}\frac{k}{a_k}\) を求めよ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle S_n=4-\frac{n+2}{2^{n-1}}\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>まず漸化式から、</p>
+        <p>\(\displaystyle a_k=2^{k-1}\)</p>
+        <p>となる</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle S_n=\sum_{k=1}^{n}\frac{k}{2^{k-1}}\)</p>
+        <p>ここで \(T_n=\displaystyle\sum_{k=1}^{n}\frac{k}{2^k}\) とおく</p>
+        <p>この和について2倍して引くと、</p>
+        <p>\(\displaystyle2T_n=1+\frac2{2}+\frac3{2^2}+\cdots+\frac n{2^{n-1}}\)</p>
+        <p>元の \(T_n\) を引くと、</p>
+        <p>\(\displaystyle T_n=1+\frac12+\frac1{2^2}+\cdots+\frac1{2^{n-1}}-\frac n{2^n}\)</p>
+        <p>等比数列の和より、</p>
+        <p>\(\displaystyle T_n=2-\frac1{2^{n-1}}-\frac n{2^n}\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle S_n=2T_n=4-\frac2{2^{n-1}}-\frac n{2^{n-1}}\)</p>
+        <p>よって、</p>
+        <p>\(\displaystyle\boxed{S_n=4-\frac{n+2}{2^{n-1}}}\)</p>
+    </div>
+</div>
+
+
+<div class="question-card" data-ans="\(2^{n-1}(n+1)\)" data-wrong="\(2^n+n\)|\(n2^{n-1}\)|\((n+1)^2\)" data-subject="2b">
+<div class="question-header"></div>
+<div class="question-text">数列 \(\{a_n\}\) を \(a_1=2,\ a_{n+1}=2a_n+2^n\) によって定めるとき、\(a_n\) の一般項を求めよ</div>
+<button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+<div class="answer-box">
+<div class="answer-title">【解答】</div>
+<div class="ans-highlight">\(\displaystyle a_n=2^{n-1}(n+1)\)</div>
+<div class="commentary-title">【解説】</div>
+<p>漸化式の両辺を \(2^{n+1}\) で割る</p>
+<p>\(\displaystyle\frac{a_{n+1}}{2^{n+1}}=\frac{a_n}{2^n}+\frac12\)</p>
+<p>ここで、</p>
+<p>\(\displaystyle b_n=\frac{a_n}{2^n}\)</p>
+<p>とおくと、</p>
+<p>\(\displaystyle b_{n+1}=b_n+\frac12\)</p>
+<p>となる</p>
+<p>これは公差 \(\displaystyle\frac12\) の等差数列である</p>
+<p>\(\displaystyle b_1=\frac{a_1}{2}=1\)</p>
+<p>したがって、</p>
+<p>\(\displaystyle b_n=1+\frac{n-1}{2}=\frac{n+1}{2}\)</p>
+<p>よって、</p>
+<p>\(\displaystyle\frac{a_n}{2^n}=\frac{n+1}{2}\)</p>
+<p>したがって、</p>
+<p>\(\displaystyle\boxed{a_n=2^{n-1}(n+1)}\)</p>
+</div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle\frac{n(n+1)}4\)" data-wrong="\(\displaystyle 2n-1-\frac{n}{2^{n-1}}\)|\(\displaystyle\frac{n(n+1)}2\)|\(\displaystyle\frac{n^2}{4}\)" data-subject="2b">
+<div class="question-header"></div>
+<div class="question-text">数列 \(\{a_n\}\) を \(a_1=1,\ a_{n+1}=2a_n+2^n\) によって定め、\(\displaystyle S_n=\sum_{k=1}^{n}\frac{a_k}{2^k}\) とする<br>このとき、\(S_n\) を求めよ</div>
+<button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+<div class="answer-box">
+<div class="answer-title">【解答】</div>
+<div class="ans-highlight">\(\displaystyle S_n=\frac{n(n+1)}4\)</div>
+<div class="commentary-title">【解説】</div>
+<p>まず漸化式を \(2^{n+1}\) で割る</p>
+<p>\(\displaystyle\frac{a_{n+1}}{2^{n+1}}=\frac{a_n}{2^n}+\frac12\)</p>
+<p>ここで、</p>
+<p>\(\displaystyle b_n=\frac{a_n}{2^n}\)</p>
+<p>とおくと、</p>
+<p>\(\displaystyle b_{n+1}=b_n+\frac12\)</p>
+<p>となる</p>
+<p>また、</p>
+<p>\(\displaystyle b_1=\frac{a_1}{2}=\frac12\)</p>
+<p>なので、</p>
+<p>\(\displaystyle b_n=\frac12+\frac{n-1}{2}=\frac n2\)</p>
+<p>したがって、</p>
+<p>\(\displaystyle\frac{a_k}{2^k}=\frac k2\)</p>
+<p>である</p>
+<p>よって、</p>
+<p>\(\displaystyle S_n=\sum_{k=1}^{n}\frac k2=\frac12\sum_{k=1}^{n}k\)</p>
+<p>等差数列の和の公式より、</p>
+<p>\(\displaystyle S_n=\frac12\cdot\frac{n(n+1)}2\)</p>
+<p>したがって、</p>
+<p>\(\displaystyle\boxed{S_n=\frac{n(n+1)}4}\)</p>
+</div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle\frac{2^{n+1}-1}{2^n-1}\)" data-wrong="\(\displaystyle\frac{2^{n+1}+1}{2^n+1}\)|\(\displaystyle\frac{2^n-1}{2^{n+1}-1}\)|\(\displaystyle\frac{2^{n+1}-1}{2^n}\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">数列 \(\{a_n\}\) を \(a_1=3,\ a_{n+1}=3-\displaystyle\frac{2}{a_n}\ (n=1,2,\cdots)\) によって定める<br>このとき、\(a_n\) を \(n\) の式で表せ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle a_n=\frac{2^{n+1}-1}{2^n-1}\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>漸化式に分数が含まれているので、そのまま扱うよりも \(a_n-1\) の逆数を考えるとよい</p>
+        <p>まず、</p>
+        <p>\(\displaystyle a_{n+1}-1=2-\frac{2}{a_n}=\frac{2(a_n-1)}{a_n}\)</p>
+        <p>ここで \(\displaystyle b_n=\frac{1}{a_n-1}\) とおく</p>
+        <p>すると、</p>
+        <p>\(\displaystyle b_{n+1}=\frac{a_n}{2(a_n-1)}=\frac12\left(1+\frac{1}{a_n-1}\right)=\frac{b_n+1}{2}\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle b_{n+1}-1=\frac12(b_n-1)\)</p>
+        <p>これは公比 \(\displaystyle\frac12\) の等比数列である</p>
+        <p>また、\(\displaystyle b_1=\frac1{3-1}=\frac12\) なので、</p>
+        <p>\(\displaystyle b_1-1=-\frac12\)</p>
+        <p>よって、</p>
+        <p>\(\displaystyle b_n-1=-\frac1{2^n}\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle b_n=1-\frac1{2^n}=\frac{2^n-1}{2^n}\)</p>
+        <p>よって、</p>
+        <p>\(\displaystyle a_n-1=\frac1{b_n}=\frac{2^n}{2^n-1}\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle a_n=1+\frac{2^n}{2^n-1}=\frac{2^{n+1}-1}{2^n-1}\)</p>
+    </div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle 2-\frac{n+2}{2^n}\)" data-wrong="\(\displaystyle 2-\frac{n+1}{2^n}\)|\(\displaystyle 2-\frac{n+2}{2^{n+1}}\)|\(\displaystyle 1-\frac{n+2}{2^n}\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">\(\displaystyle S_n=\sum_{k=1}^{n}\frac{k}{2^k}\) とする<br>このとき \(S_n\) を \(n\) の式で表せ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle S_n=2-\frac{n+2}{2^n}\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>このように \(k\) が分子にある等比型の和では、\(S_n\) を2倍して引く方法が有効である</p>
+        <p>\(\displaystyle S_n=\frac12+\frac2{2^2}+\frac3{2^3}+\cdots+\frac{n}{2^n}\)</p>
+        <p>両辺を2倍すると、</p>
+        <p>\(\displaystyle 2S_n=1+\frac2{2}+\frac3{2^2}+\cdots+\frac{n}{2^{n-1}}\)</p>
+        <p>ここで \(2S_n-S_n\) を計算する</p>
+        <p>中間の項を整理すると、</p>
+        <p>\(\displaystyle S_n=1+\frac12+\frac1{2^2}+\cdots+\frac1{2^{n-1}}-\frac{n}{2^n}\)</p>
+        <p>最初の部分は初項1、公比 \(\displaystyle\frac12\) の等比数列の和なので、</p>
+        <p>\(\displaystyle 1+\frac12+\cdots+\frac1{2^{n-1}}=\frac{1-(1/2)^n}{1-1/2}=2-\frac1{2^{n-1}}\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle S_n=2-\frac1{2^{n-1}}-\frac{n}{2^n}\)</p>
+        <p>\(\displaystyle\frac1{2^{n-1}}=\frac2{2^n}\) なので、</p>
+        <p>\(\displaystyle S_n=2-\frac{n+2}{2^n}\)</p>
+    </div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle 6-\frac{n^2+4n+6}{2^n}\)" data-wrong="\(\displaystyle 6-\frac{n^2+2n+6}{2^n}\)|\(\displaystyle 6-\frac{n^2+4n+4}{2^n}\)|\(\displaystyle 4-\frac{n^2+4n+6}{2^n}\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">\(\displaystyle S_n=\sum_{k=1}^{n}\frac{k^2}{2^k}\) とする<br>このとき \(S_n\) を \(n\) の式で表せ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle S_n=6-\frac{n^2+4n+6}{2^n}\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>\(k^2\) が分子にあるので、3問目と同じく \(2S_n-S_n\) を考える</p>
+        <p>\(\displaystyle S_n=\frac1{2}+\frac4{2^2}+\frac9{2^3}+\cdots+\frac{n^2}{2^n}\)</p>
+        <p>2倍すると、</p>
+        <p>\(\displaystyle 2S_n=1+\frac4{2}+\frac9{2^2}+\cdots+\frac{n^2}{2^{n-1}}\)</p>
+        <p>したがって差をとると、</p>
+        <p>\(\displaystyle S_n=1+\sum_{k=1}^{n-1}\frac{(k+1)^2-k^2}{2^k}-\frac{n^2}{2^n}\)</p>
+        <p>ここで、\((k+1)^2-k^2=2k+1\) なので、</p>
+        <p>\(\displaystyle S_n=1+2\sum_{k=1}^{n-1}\frac{k}{2^k}+\sum_{k=1}^{n-1}\frac1{2^k}-\frac{n^2}{2^n}\)</p>
+        <p>3問目の結果より、</p>
+        <p>\(\displaystyle\sum_{k=1}^{n-1}\frac{k}{2^k}=2-\frac{n+1}{2^{n-1}}\)</p>
+        <p>また、</p>
+        <p>\(\displaystyle\sum_{k=1}^{n-1}\frac1{2^k}=1-\frac1{2^{n-1}}\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle S_n=1+2\left(2-\frac{n+1}{2^{n-1}}\right)+1-\frac1{2^{n-1}}-\frac{n^2}{2^n}\)</p>
+        <p>分母を \(2^n\) にそろえると、</p>
+        <p>\(\displaystyle S_n=6-\frac{n^2+4n+6}{2^n}\)</p>
+    </div>
+</div>
+
+
+<div class="question-card" data-ans="\(\displaystyle\frac{2n}{n+1}\)" data-wrong="\(\displaystyle\frac{n}{n+1}\)|\(\displaystyle\frac{2n}{n+2}\)|\(\displaystyle\frac{2n+1}{n+1}\)" data-subject="2b">
+    <div class="question-header"></div>
+    <div class="question-text">数列 \(\{a_n\}\) を \(\displaystyle a_n=\sum_{k=1}^{n}\frac{2}{k(k+1)}\) によって定める<br>このとき \(a_n\) を \(n\) の式で表せ</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">\(\displaystyle a_n=\frac{2n}{n+1}\)</div>
+        <div class="commentary-title">【解説】</div>
+        <p>分母が \(k(k+1)\) なので、部分分数分解を利用する</p>
+        <p>\(\displaystyle\frac2{k(k+1)}=2\left(\frac1k-\frac1{k+1}\right)\)</p>
+        <p>したがって、</p>
+        <p>\(\displaystyle a_n=2\left\{\left(1-\frac12\right)+\left(\frac12-\frac13\right)+\cdots+\left(\frac1n-\frac1{n+1}\right)\right\}\)</p>
+        <p>ここでは隣り合う項が次々に打ち消し合う</p>
+        <p>実際に展開すると、</p>
+        <p>\(\displaystyle a_n=2\left(1-\frac12+\frac12-\frac13+\cdots+\frac1n-\frac1{n+1}\right)\)</p>
+        <p>途中の項がすべて消えるので、</p>
+        <p>\(\displaystyle a_n=2\left(1-\frac1{n+1}\right)\)</p>
+        <p>よって、</p>
+        <p>\(\displaystyle a_n=\frac{2n}{n+1}\)</p>
+    </div>
+</div>
+        
+    </div>
+
+    <div
+        id="sec-2b-9"
+        class="content-section">
+        <!-- 統計的な推測 -->
+    </div>
+
+    <div
+        id="sec-2b-10"
+        class="content-section">
+        <!-- 数2B総合問題 -->
+    </div>
+
+
+
+    <!-- 数学Ⅲ・C -->
+
+    <div
+        id="sec-3c-1"
+        class="content-section">
+        <!-- 極限 -->
+    </div>
+
+    <div
+        id="sec-3c-2"
+        class="content-section">
+        <!-- 微分法 -->
+    </div>
+
+    <div
+        id="sec-3c-3"
+        class="content-section">
+        <!-- 積分法 -->
+    </div>
+
+    <div
+        id="sec-3c-4"
+        class="content-section">
+        <!-- ベクトル -->
+
+<div class="question-card" data-ans="\(\displaystyle\frac{7\sqrt{21}}{2}\)" data-wrong="\(\displaystyle\frac{7\sqrt{3}}{2}\)|\(7\sqrt{21}\)|\(\displaystyle\frac{\sqrt{21}}{2}\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) において、\(\overrightarrow{AB}=\overrightarrow{a},\ \overrightarrow{AC}=\overrightarrow{b}\) とする　\(|\overrightarrow{a}|=5,\ |\overrightarrow{b}|=7,\ \overrightarrow{a}\cdot\overrightarrow{b}=14\) であるとき、三角形 \(ABC\) の面積を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle\frac{7\sqrt{21}}{2}\)</div><div class="commentary-title">【解説】</div><p>三角形の面積を求めるには、2辺の長さとその間の角を使うことができる</p><p>\(\angle BAC=\theta\) とおくと、\(\overrightarrow{a}\) と \(\overrightarrow{b}\) のなす角が \(\theta\) である</p><p>内積の公式より、\(\displaystyle\overrightarrow{a}\cdot\overrightarrow{b}=|\overrightarrow{a}||\overrightarrow{b}|\cos\theta\) だから、\(\displaystyle14=5\cdot7\cos\theta\)</p><p>したがって、\(\displaystyle\cos\theta=\frac25\)</p><p>ここで \(\sin^2\theta+\cos^2\theta=1\) より、\(\displaystyle\sin\theta=\sqrt{1-\left(\frac25\right)^2}=\frac{\sqrt{21}}5\)</p><p>三角形の面積は \(\displaystyle\frac12|\overrightarrow{a}||\overrightarrow{b}|\sin\theta\) なので、\(\displaystyle\frac12\cdot5\cdot7\cdot\frac{\sqrt{21}}5=\frac{7\sqrt{21}}2\)</p><p>よって、求める面積は \(\displaystyle\frac{7\sqrt{21}}2\) である</p></div></div>
+
+<div class="question-card" data-ans="\(x=\displaystyle\frac{5}{7},y=\displaystyle\frac{2}{7}\)" data-wrong="\(x=\displaystyle\frac{2}{7},y=\displaystyle\frac{5}{7}\)|\(x=\displaystyle\frac{3}{7},y=\displaystyle\frac{4}{7}\)|\(x=\displaystyle\frac{4}{7},y=\displaystyle\frac{3}{7}\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) において、\(\overrightarrow{AB}=\overrightarrow{a},\ \overrightarrow{AC}=\overrightarrow{b}\) とする　\(|\overrightarrow{a}|=4,\ |\overrightarrow{b}|=5,\ \overrightarrow{a}\cdot\overrightarrow{b}=10\) である　点 \(P\) は辺 \(BC\) 上にあり、\(\overrightarrow{AP}=x\overrightarrow{a}+y\overrightarrow{b}\) と表される　さらに \(AP\perp BC\) を満たすとき、\(x,y\) の値を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle x=\frac57,\quad y=\frac27\)</div><div class="commentary-title">【解説】</div><p>まず、\(P\) が \(BC\) 上にあるという条件から考える</p><p>\(\overrightarrow{AP}=x\overrightarrow{a}+y\overrightarrow{b}\) であり、\(P\) が \(BC\) 上にあるため、係数の和は \(1\) になる</p><p>したがって、\(\displaystyle x+y=1\) である</p><p>次に、\(AP\perp BC\) を使う</p><p>\(\overrightarrow{BC}=\overrightarrow{b}-\overrightarrow{a}\) なので、垂直条件より、\(\displaystyle\overrightarrow{AP}\cdot\overrightarrow{BC}=0\)</p><p>つまり、\(\displaystyle(x\overrightarrow{a}+y\overrightarrow{b})\cdot(\overrightarrow{b}-\overrightarrow{a})=0\)</p><p>分配法則を使うと、\(\displaystyle x(\overrightarrow{a}\cdot\overrightarrow{b}-|\overrightarrow{a}|^2)+y(|\overrightarrow{b}|^2-\overrightarrow{a}\cdot\overrightarrow{b})=0\)</p><p>与えられた値を代入すると、\(\displaystyle x(10-16)+y(25-10)=0\)</p><p>したがって、\(\displaystyle-6x+15y=0\)、つまり \(\displaystyle2x=5y\) である</p><p>ここで \(x+y=1\) と連立する</p><p>\(\displaystyle x=\frac52y\) なので、\(\displaystyle\frac52y+y=1\)</p><p>\(\displaystyle\frac72y=1\) より、\(\displaystyle y=\frac27\)</p><p>したがって、\(\displaystyle x=1-\frac27=\frac57\)</p></div></div>
+
+<div class="question-card" data-ans="\(\displaystyle\frac{\sqrt{7}}{3}\)" data-wrong="\(\displaystyle\frac{\sqrt{7}}{2}\)|\(\displaystyle\frac{\sqrt{7}}{6}\)|\(\displaystyle\frac{7}{3}\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) において、\(\overrightarrow{AB}=\overrightarrow{a},\ \overrightarrow{AC}=\overrightarrow{b}\) とする　\(|\overrightarrow{a}|=|\overrightarrow{b}|=6,\ \overrightarrow{a}\cdot\overrightarrow{b}=18\) である　点 \(P\) は辺 \(BC\) を \(BP:PC=2:1\) に内分する点であるとき、\(\displaystyle\frac{AP}{AB}\) を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle\frac{\sqrt7}{3}\)</div><div class="commentary-title">【解説】</div><p>点 \(P\) は \(BC\) を \(2:1\) に内分するので、内分点の公式から、\(\displaystyle\overrightarrow{AP}=\frac{\overrightarrow{a}+2\overrightarrow{b}}3\) となる</p><p>したがって、長さを求めるために両辺の2乗を考える</p><p>\(\displaystyle AP^2=\frac19|\overrightarrow{a}+2\overrightarrow{b}|^2\)</p><p>ここで、\(\displaystyle|\overrightarrow{u}+\overrightarrow{v}|^2=|\overrightarrow{u}|^2+2\overrightarrow{u}\cdot\overrightarrow{v}+|\overrightarrow{v}|^2\) を使う</p><p>よって、\(\displaystyle|\overrightarrow{a}+2\overrightarrow{b}|^2=|\overrightarrow{a}|^2+4\overrightarrow{a}\cdot\overrightarrow{b}+4|\overrightarrow{b}|^2\)</p><p>与えられた値を代入すると、\(\displaystyle36+4\cdot18+4\cdot36=252\)</p><p>したがって、\(\displaystyle AP^2=\frac{252}{9}=28\)</p><p>よって、\(\displaystyle AP=2\sqrt7\)</p><p>また \(AB=|\overrightarrow{a}|=6\) なので、\(\displaystyle\frac{AP}{AB}=\frac{2\sqrt7}{6}=\frac{\sqrt7}{3}\)</p></div></div>
+
+<div class="question-card" data-ans="\(\displaystyle\frac{3\sqrt{21}}{7}\)" data-wrong="\(\displaystyle\frac{3\sqrt{7}}{7}\)|\(\displaystyle\frac{\sqrt{21}}{3}\)|\(\displaystyle\frac{3\sqrt{3}}{7}\)" data-subject="2b"><div class="question-header"></div><div class="question-text">2つのベクトル \(\overrightarrow{a},\overrightarrow{b}\) が \(|\overrightarrow{a}|=2,\ |\overrightarrow{b}|=3,\ \overrightarrow{a}\cdot\overrightarrow{b}=3\) を満たしている　点 \(P\) が \(\overrightarrow{OP}=t\overrightarrow{a}+(1-t)\overrightarrow{b}\)、\(0\leq t\leq1\) によって定められるとき、\(OP\) の最小値を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle\frac{3\sqrt{21}}7\)</div><div class="commentary-title">【解説】</div><p>長さ \(OP\) を直接扱うと平方根が出てきて計算しにくいので、まず \(OP^2\) を求める</p><p>\(\displaystyle OP^2=|t\overrightarrow{a}+(1-t)\overrightarrow{b}|^2\)</p><p>ベクトルの2乗を展開すると、\(\displaystyle OP^2=t^2|\overrightarrow{a}|^2+2t(1-t)\overrightarrow{a}\cdot\overrightarrow{b}+(1-t)^2|\overrightarrow{b}|^2\)</p><p>与えられた値を代入して、\(\displaystyle OP^2=4t^2+6t(1-t)+9(1-t)^2\)</p><p>展開すると、\(\displaystyle OP^2=7t^2-12t+9\)</p><p>平方完成すると、\(\displaystyle OP^2=7\left(t-\frac67\right)^2+\frac{27}{7}\)</p><p>\(0\leq t\leq1\) の範囲には \(t=\frac67\) が含まれているので、最小値は平方の部分が \(0\) になるときにとる</p><p>したがって、\(\displaystyle OP^2_{\min}=\frac{27}{7}\)</p><p>よって、\(\displaystyle OP_{\min}=\sqrt{\frac{27}{7}}=\frac{3\sqrt{21}}7\)</p></div></div>
+
+<div class="question-card" data-ans="\(3\sqrt{3}\)" data-wrong="\(3\sqrt{2}\)|\(6\)|\(9\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) の重心を \(G\) とする　点 \(O\) を原点とし、\(\overrightarrow{OA}=\overrightarrow{a},\ \overrightarrow{OB}=\overrightarrow{b},\ \overrightarrow{OC}=\overrightarrow{c}\) とする　\(|\overrightarrow{a}|=|\overrightarrow{b}|=|\overrightarrow{c}|=3\) かつ \(G=O\) であるとき、三角形 \(ABC\) の各辺の長さを求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle AB=BC=CA=3\sqrt3\)</div><div class="commentary-title">【解説】</div><p>重心 \(G\) の位置ベクトルは、3頂点の位置ベクトルの平均なので、\(\displaystyle\overrightarrow{OG}=\frac{\overrightarrow{a}+\overrightarrow{b}+\overrightarrow{c}}3\)</p><p>今回は \(G=O\) なので、\(\overrightarrow{OG}=\overrightarrow{0}\) である</p><p>したがって、\(\displaystyle\overrightarrow{a}+\overrightarrow{b}+\overrightarrow{c}=\overrightarrow{0}\)</p><p>この式から、\(\displaystyle\overrightarrow{c}=-(\overrightarrow{a}+\overrightarrow{b})\) と表せる</p><p>両辺の2乗を考えると、\(\displaystyle|\overrightarrow{c}|^2=|\overrightarrow{a}+\overrightarrow{b}|^2\)</p><p>左辺は \(9\) なので、\(\displaystyle9=9+9+2\overrightarrow{a}\cdot\overrightarrow{b}\)</p><p>したがって、\(\displaystyle\overrightarrow{a}\cdot\overrightarrow{b}=-\frac92\)</p><p>次に、\(\overrightarrow{AB}=\overrightarrow{b}-\overrightarrow{a}\) だから、\(\displaystyle AB^2=|\overrightarrow{b}-\overrightarrow{a}|^2\)</p><p>\(\displaystyle=|\overrightarrow{b}|^2+|\overrightarrow{a}|^2-2\overrightarrow{a}\cdot\overrightarrow{b}\)</p><p>\(\displaystyle=9+9-2\left(-\frac92\right)=27\)</p><p>よって、\(\displaystyle AB=3\sqrt3\)</p><p>同様に \(BC=CA=3\sqrt3\) となる</p></div></div>
+
+<div class="question-card" data-ans="\(s=t\)" data-wrong="\(s=1-t\)|\(s=2t\)|\(s=3t\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) において、点 \(P,Q\) をそれぞれ辺 \(AB,AC\) 上の点とし、\(\displaystyle\overrightarrow{AP}=t\overrightarrow{AB},\ \overrightarrow{AQ}=s\overrightarrow{AC}\) とする　\(PQ\parallel BC\) であるとき、\(s,t\) の関係式を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle s=t\)</div><div class="commentary-title">【解説】</div><p>まず、\(\overrightarrow{AB}=\overrightarrow{b},\ \overrightarrow{AC}=\overrightarrow{c}\) とおく</p><p>条件より、\(\overrightarrow{AP}=t\overrightarrow{b},\ \overrightarrow{AQ}=s\overrightarrow{c}\) である</p><p>したがって、\(\displaystyle\overrightarrow{PQ}=\overrightarrow{AQ}-\overrightarrow{AP}=s\overrightarrow{c}-t\overrightarrow{b}\)</p><p>一方、\(\overrightarrow{BC}=\overrightarrow{c}-\overrightarrow{b}\) である</p><p>\(PQ\parallel BC\) なので、ある実数 \(k\) を使って、\(\displaystyle s\overrightarrow{c}-t\overrightarrow{b}=k(\overrightarrow{c}-\overrightarrow{b})\)</p><p>右辺を展開すると、\(\displaystyle k\overrightarrow{c}-k\overrightarrow{b}\)</p><p>\(\overrightarrow{b},\overrightarrow{c}\) は三角形 \(ABC\) の2辺方向のベクトルなので一次独立である</p><p>したがって、それぞれの係数を比較できる</p><p>\(\displaystyle s=k,\qquad t=k\)</p><p>よって、\(\displaystyle s=t\)</p></div></div>
+
+<div class="question-card" data-ans="最大値\(4\)、最小値\(1\)" data-wrong="最大値\(3\)、最小値\(1\)|最大値\(4\)、最小値\(0\)|最大値\(5\)、最小値\(1\)" data-subject="2b"><div class="question-header"></div><div class="question-text">2つのベクトル \(\overrightarrow{a},\overrightarrow{b}\) が \(|\overrightarrow{a}|=1,\ |\overrightarrow{b}|=2,\ \overrightarrow{a}\cdot\overrightarrow{b}=1\) を満たす　実数 \(x,y\) が \(0\leq x\leq1,\ 0\leq y\leq1,\ x+y=1\) を満たすとき、\(|x\overrightarrow{a}+y\overrightarrow{b}|^2\) の最大値と最小値を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">最大値 \(4\)、最小値 \(1\)</div><div class="commentary-title">【解説】</div><p>条件 \(x+y=1\) があるので、\(y=1-x\) とおく</p><p>すると、求める式は \(\displaystyle|x\overrightarrow{a}+(1-x)\overrightarrow{b}|^2\) となる</p><p>ベクトルの2乗を展開すると、\(\displaystyle x^2|\overrightarrow{a}|^2+2x(1-x)\overrightarrow{a}\cdot\overrightarrow{b}+(1-x)^2|\overrightarrow{b}|^2\)</p><p>与えられた値を代入すると、\(\displaystyle x^2+2x(1-x)+4(1-x)^2\)</p><p>整理すると、\(\displaystyle3x^2-6x+4\)</p><p>平方完成すると、\(\displaystyle3(x-1)^2+1\)</p><p>\(0\leq x\leq1\) なので最小値は \(x=1\) のときの \(1\)</p><p>また \(x=0\) のとき \(\displaystyle3(0-1)^2+1=4\) となり、最大値は \(4\)</p><p>したがって、最大値は \(4\)、最小値は \(1\) である</p></div></div>
+
+<div class="question-card" data-ans="\(\displaystyle\frac{5}{9}≤x≤1\)" data-wrong="\(0≤x≤\displaystyle\frac{5}{9}\)|\(\displaystyle\frac{1}{3}≤x≤1\)|\(\displaystyle\frac{5}{9}≤x≤\displaystyle\frac{2}{3}\)" data-subject="2b"><div class="question-header"></div><div class="question-text">\(|\overrightarrow{a}|=2,\ |\overrightarrow{b}|=3,\ \overrightarrow{a}\cdot\overrightarrow{b}=2\) とする　点 \(P\) が \(\overrightarrow{OP}=x\overrightarrow{a}+y\overrightarrow{b}\) と表され、\(x+y=1\) を満たすとする　\(OP\leq2\) を満たす実数 \(x\) の範囲を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle\frac59\leq x\leq1\)</div><div class="commentary-title">【解説】</div><p>条件 \(x+y=1\) より、\(\displaystyle y=1-x\) と表せる</p><p>したがって、\(\displaystyle\overrightarrow{OP}=x\overrightarrow{a}+(1-x)\overrightarrow{b}\)</p><p>まず \(OP^2\) を求める</p><p>\(\displaystyle OP^2=4x^2+4x(1-x)+9(1-x)^2\)</p><p>整理すると、\(\displaystyle OP^2=9x^2-14x+9\)</p><p>条件 \(OP\leq2\) は、両辺が0以上なので2乗して、\(\displaystyle OP^2\leq4\)</p><p>したがって、\(\displaystyle9x^2-14x+9\leq4\)</p><p>整理すると、\(\displaystyle9x^2-14x+5\leq0\)</p><p>因数分解すると、\(\displaystyle(9x-5)(x-1)\leq0\)</p><p>よって、\(\displaystyle\frac59\leq x\leq1\)</p></div></div>
+
+<div class="question-card" data-ans="\(x=\displaystyle\frac{5}{9},y=\displaystyle\frac{1}{6},AB:AC=3:4\)" data-wrong="\(x=\displaystyle\frac{1}{2},y=\displaystyle\frac{1}{4},AB:AC=3:4\)|\(x=\displaystyle\frac{5}{9},y=\displaystyle\frac{1}{3},AB:AC=4:3\)|\(x=\displaystyle\frac{4}{9},y=\displaystyle\frac{1}{6},AB:AC=3:4\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) において、\(\overrightarrow{AB}=\overrightarrow{a},\ \overrightarrow{AC}=\overrightarrow{b}\) とする　\(|\overrightarrow{a}|=3,\ |\overrightarrow{b}|=4,\ \overrightarrow{a}\cdot\overrightarrow{b}=6\) である　点 \(P\) は三角形 \(ABC\) の内部にあり、\(\overrightarrow{AP}=x\overrightarrow{a}+y\overrightarrow{b}\) と表される　さらに \(PA\perp BC\)、\(PB\perp AC\) が成り立つとき、\(x,y,\displaystyle\frac{AB}{AC}\) を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle x=\frac59,\quad y=\frac16,\quad\frac{AB}{AC}=\frac34\)</div><div class="commentary-title">【解説】</div><p>まず、\(PA\perp BC\) を使う</p><p>\(\overrightarrow{AP}=x\overrightarrow{a}+y\overrightarrow{b}\)、\(\overrightarrow{BC}=\overrightarrow{b}-\overrightarrow{a}\) なので、\(\displaystyle(x\overrightarrow{a}+y\overrightarrow{b})\cdot(\overrightarrow{b}-\overrightarrow{a})=0\)</p><p>展開すると、\(\displaystyle x(\overrightarrow{a}\cdot\overrightarrow{b}-|\overrightarrow{a}|^2)+y(|\overrightarrow{b}|^2-\overrightarrow{a}\cdot\overrightarrow{b})=0\)</p><p>値を代入すると、\(\displaystyle x(6-9)+y(16-6)=0\)</p><p>したがって、\(\displaystyle-3x+10y=0\)</p><p>次に \(PB\perp AC\) を使う</p><p>\(\overrightarrow{PB}=\overrightarrow{AB}-\overrightarrow{AP}=\overrightarrow{a}-x\overrightarrow{a}-y\overrightarrow{b}=(1-x)\overrightarrow{a}-y\overrightarrow{b}\)</p><p>これが \(\overrightarrow{b}\) と垂直なので、\(\displaystyle((1-x)\overrightarrow{a}-y\overrightarrow{b})\cdot\overrightarrow{b}=0\)</p><p>よって、\(\displaystyle(1-x)(\overrightarrow{a}\cdot\overrightarrow{b})-y|\overrightarrow{b}|^2=0\)</p><p>値を代入して、\(\displaystyle6(1-x)-16y=0\)</p><p>整理すると、\(\displaystyle3x+8y=3\)</p><p>したがって、\(\displaystyle-3x+10y=0\) と \(\displaystyle3x+8y=3\) を連立する</p><p>2式を足すと、\(\displaystyle18y=3\) なので、\(\displaystyle y=\frac16\)</p><p>これを \(-3x+10y=0\) に代入すると、\(\displaystyle3x=\frac{10}{6}\)</p><p>したがって、\(\displaystyle x=\frac59\)</p><p>最後に、\(\displaystyle\frac{AB}{AC}=\frac{|\overrightarrow{a}|}{|\overrightarrow{b}|}=\frac34\)</p></div></div>
+
+<div class="question-card" data-ans="\(35:3\)" data-wrong="\(16:3\)|\(3:35\)|\(5:3\)" data-subject="2b"><div class="question-header"></div><div class="question-text">三角形 \(ABC\) において、\(AB=5,\ AC=3,\ \angle BAC=60^\circ\) とする　点 \(P\) は辺 \(BC\) 上にあり、\(AP\perp BC\) を満たすとき、\(BP:PC\) を求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle35:3\)</div><div class="commentary-title">【解説】</div><p>\(\overrightarrow{AB}=\overrightarrow{a},\ \overrightarrow{AC}=\overrightarrow{b}\) とおく</p><p>すると、\(|\overrightarrow{a}|=5,\ |\overrightarrow{b}|=3\) である</p><p>また、\(\angle BAC=60^\circ\) なので、内積の公式より、\(\displaystyle\overrightarrow{a}\cdot\overrightarrow{b}=5\cdot3\cdot\cos60^\circ=\frac{15}{2}\)</p><p>\(BP:PC=m:n\) とおく</p><p>内分点の公式より、\(\displaystyle\overrightarrow{AP}=\frac{n\overrightarrow{a}+m\overrightarrow{b}}{m+n}\)</p><p>また、\(\overrightarrow{BC}=\overrightarrow{b}-\overrightarrow{a}\) である</p><p>\(AP\perp BC\) より、\(\displaystyle(n\overrightarrow{a}+m\overrightarrow{b})\cdot(\overrightarrow{b}-\overrightarrow{a})=0\)</p><p>展開すると、\(\displaystyle n(\overrightarrow{a}\cdot\overrightarrow{b}-|\overrightarrow{a}|^2)+m(|\overrightarrow{b}|^2-\overrightarrow{a}\cdot\overrightarrow{b})=0\)</p><p>値を代入すると、\(\displaystyle n\left(\frac{15}{2}-25\right)+m\left(9-\frac{15}{2}\right)=0\)</p><p>つまり、\(\displaystyle-\frac{35}{2}n+\frac32m=0\)</p><p>両辺を2倍して、\(\displaystyle-35n+3m=0\)</p><p>したがって、\(\displaystyle3m=35n\)</p><p>よって、\(\displaystyle m:n=35:3\)</p><p>したがって、求める比は \(\displaystyle BP:PC=35:3\)</p></div></div>
+
+<div class="question-card" data-ans="\(\sqrt{7}\)" data-wrong="\(2\sqrt{3}\)|\(\sqrt{3}\)|\(2\sqrt{7}\)" data-subject="2b"><div class="question-header"></div><div class="question-text">平行四辺形 \(ABCD\) において、\(\overrightarrow{AB}=\overrightarrow{a},\ \overrightarrow{AD}=\overrightarrow{b}\) とする　\(|\overrightarrow{a}|=2,\ |\overrightarrow{b}|=4,\ \overrightarrow{a}\cdot\overrightarrow{b}=4\) である　対角線 \(AC\) と \(BD\) の交点を \(P\) とするとき、\(PC\) の長さを求めよ</div><button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button><div class="answer-box"><div class="answer-title">【解答】</div><div class="ans-highlight">\(\displaystyle\sqrt7\)</div><div class="commentary-title">【解説】</div><p>平行四辺形の対角線は互いに中点で交わるので、\(P\) は \(AC\) の中点である</p><p>\(\overrightarrow{AC}=\overrightarrow{AB}+\overrightarrow{AD}=\overrightarrow{a}+\overrightarrow{b}\)</p><p>したがって、\(\displaystyle AC^2=|\overrightarrow{a}+\overrightarrow{b}|^2\)</p><p>ベクトルの2乗を展開すると、\(\displaystyle AC^2=|\overrightarrow{a}|^2+2\overrightarrow{a}\cdot\overrightarrow{b}+|\overrightarrow{b}|^2\)</p><p>与えられた値を代入して、\(\displaystyle AC^2=4+8+16=28\)</p><p>よって、\(\displaystyle AC=2\sqrt7\)</p><p>\(P\) は \(AC\) の中点なので、\(\displaystyle PC=\frac12AC=\sqrt7\)</p><p>したがって、求める長さは \(\displaystyle\sqrt7\) である</p></div></div>
+        
+    </div>
+
+    <div
+        id="sec-3c-5"
+        class="content-section">
+        <!-- 複素数平面 -->
+    </div>
+
+    <div
+        id="sec-3c-6"
+        class="content-section">
+        <!-- 式と曲線 -->
+    </div>
+
+    <div
+        id="sec-3c-7"
+        class="content-section">
+        <!-- 行列 -->
+    </div>
+
+    <div
+        id="sec-3c-8"
+        class="content-section">
+        <!-- 数3C総合問題 -->
+    </div>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
