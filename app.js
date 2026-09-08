@@ -126,10 +126,109 @@ function clearSubjectState() {
 }
 
 
+// 問題データ
+window.questionBank =
+    window.questionBank || {};
+
+function hasQuestionData(secId) {
+    return Array.isArray(window.questionBank[secId]);
+}
+
+function normalizeQuestion(question) {
+    if (!question) return null;
+
+    if (question.nodeType === 1) {
+        return {
+            _legacyCard: question,
+            id: question.dataset.questionId || '',
+            question: question.querySelector('.question-text')?.innerHTML || '',
+            answer: (question.dataset.ans || '').trim(),
+            wrong: (question.dataset.wrong || '')
+                .split('|')
+                .map(s => s.trim())
+                .filter(Boolean),
+            explanation: question.querySelector('.answer-box')?.innerHTML || ''
+        };
+    }
+
+    return {
+        ...question,
+        wrong: Array.isArray(question.wrong)
+            ? question.wrong
+            : String(question.wrong || '')
+                .split('|')
+                .map(s => s.trim())
+                .filter(Boolean)
+    };
+}
+
+function getQuestionField(question, field) {
+    const q = normalizeQuestion(question);
+    return q ? q[field] : '';
+}
+
+function createQuestionCard(question, index) {
+    const q = normalizeQuestion(question);
+    if (!q) return null;
+
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.dataset.questionId =
+        q.id ||
+        `${_activeSec?.id || 'question'}-${index + 1}`;
+
+    card.dataset.ans = q.answer || '';
+
+    card.dataset.wrong =
+        Array.isArray(q.wrong)
+            ? q.wrong.join('|')
+            : String(q.wrong || '');
+
+    card.innerHTML = `
+    <div class="question-header"></div>
+    <div class="question-text">${q.question || ''}</div>
+    <button class="toggle-button" onclick="toggleAnswer(this)">答えと解説を見る</button>
+    <div class="answer-box" style="display:none;">
+        <div class="answer-title">【解答】</div>
+        <div class="ans-highlight">${q.answer || ''}</div>
+        <div class="commentary-title">【解説】</div>
+        ${q.explanation || ''}
+    </div>
+`;
+
+    card._questionData = q;
+
+    return card;
+}
+
+function renderQuestionSection(sec) {
+    if (!sec || !hasQuestionData(sec.id)) return;
+
+    if (sec.dataset.rendered === 'true') {
+        return;
+    }
+
+    const data = window.questionBank[sec.id];
+
+    const frag = document.createDocumentFragment();
+
+    data.forEach(item => {
+        frag.appendChild(createQuestionCard(item));
+    });
+
+    sec.replaceChildren(frag);
+
+    sec.dataset.rendered = 'true';
+}
+
+
 // 科目選択
 function selectSubject(code) {
-    const btn = $$id('sub-' + code);
-    const launchBtn = $$id('dynamic-start-btn');
+    const btn =
+        $$id('sub-' + code);
+
+    const launchBtn =
+        $$id('dynamic-start-btn');
 
     if (!btn) return;
 
@@ -145,16 +244,21 @@ function selectSubject(code) {
         }
 
         refreshMaxCount();
+
         return;
     }
 
-    document.querySelectorAll('.subject-btn').forEach(b => {
-        b.classList.remove('active');
-    });
+    document
+        .querySelectorAll('.subject-btn')
+        .forEach(b => {
+            b.classList.remove('active');
+        });
 
-    document.querySelectorAll('.field-btn').forEach(b => {
-        b.classList.remove('active');
-    });
+    document
+        .querySelectorAll('.field-btn')
+        .forEach(b => {
+            b.classList.remove('active');
+        });
 
     hideAllSubjectFields();
     hideAllSections();
@@ -194,7 +298,6 @@ function selectField(secId, btnId, fieldName) {
 
     if (btn.classList.contains('active')) {
         btn.classList.remove('active');
-
         hideActiveSection();
 
         const activeSub =
@@ -217,18 +320,8 @@ function selectField(secId, btnId, fieldName) {
 
     hideAllSections();
 
+    /* ここまでをクリック直後に実行 */
     btn.classList.add('active');
-
-    const sec =
-        $$id(secId);
-
-    if (sec) {
-        sec.style.display = 'block';
-        _activeSec = sec;
-        typesetAfterPaint(sec);
-    } else {
-        _activeSec = null;
-    }
 
     const activeSub =
         document.querySelector('.subject-btn.active');
@@ -240,26 +333,60 @@ function selectField(secId, btnId, fieldName) {
 
     if (!activeSub) {
         _activeSubject =
-            secId.match(/^sec-([^-]+)-/)
-                ?. [1] || null;
+            secId.match(/^sec-([^-]+)-/)?.[1] || null;
     }
 
-    refreshMaxCount();
+    /* ここから後回し */
+    setTimeout(() => {
+        const sec = $$id(secId);
+
+        if (!sec) {
+            _activeSec = null;
+            return;
+        }
+
+        _activeSec = sec;
+
+        if (hasQuestionData(secId)) {
+            renderQuestionSection(sec);
+        }
+
+        sec.style.display = 'block';
+
+        refreshMaxCount();
+
+        /*
+         * MathJaxは問題生成・表示が終わってから
+         * 1回だけ実行
+         */
+        requestAnimationFrame(() => {
+            if (!sec.dataset.mjxDone) {
+                typesetAfterPaint(sec);
+            }
+        });
+
+    }, 0);
 }
 
 
 // 答え・解説
 function toggleAnswer(btn) {
-    const box = btn.nextElementSibling;
+    const box =
+        btn.nextElementSibling;
 
     if (!box) return;
 
     if (box.style.display === 'block') {
         box.style.display = 'none';
-        btn.textContent = '答えと解説を見る';
+
+        btn.textContent =
+            '答えと解説を見る';
     } else {
         box.style.display = 'block';
-        btn.textContent = '答えと解説を隠す';
+
+        btn.textContent =
+            '答えと解説を隠す';
+
         typesetAfterPaint(box);
     }
 }
@@ -268,28 +395,122 @@ function toggleAnswer(btn) {
 // 問題取得
 function getQuestionPool() {
     if (_activeSec) {
+        if (hasQuestionData(_activeSec.id)) {
+            return window.questionBank[_activeSec.id]
+                .map(normalizeQuestion)
+                .filter(Boolean);
+        }
+
         return Array.from(
             _activeSec.querySelectorAll('.question-card')
-        );
+        )
+            .map(normalizeQuestion)
+            .filter(Boolean);
     }
 
     if (_activeSubject === 'all') {
-        return Array.from(
-            document.querySelectorAll('.question-card')
-        );
+        const dataQuestions =
+            Object.values(window.questionBank)
+                .flatMap(list =>
+                    Array.isArray(list)
+                        ? list
+                        : []
+                )
+                .map(normalizeQuestion)
+                .filter(Boolean);
+
+        const dataSectionIds =
+            new Set(
+                Object.keys(window.questionBank)
+            );
+
+        const legacyQuestions =
+            Array.from(
+                document.querySelectorAll(
+                    '.content-section .question-card'
+                )
+            )
+                .filter(card =>
+                    !dataSectionIds.has(
+                        card.closest('.content-section')?.id
+                    )
+                )
+                .map(normalizeQuestion)
+                .filter(Boolean);
+
+        return [
+            ...dataQuestions,
+            ...legacyQuestions
+        ];
     }
 
     if (_activeSubject) {
-        return Array.from(
-            document.querySelectorAll(
-                `[id^="sec-${_activeSubject}-"].content-section .question-card`
+        const dataQuestions =
+            Object.entries(window.questionBank)
+                .filter(([secId]) =>
+                    secId.startsWith(
+                        `sec-${_activeSubject}-`
+                    )
+                )
+                .flatMap(([, list]) =>
+                    Array.isArray(list)
+                        ? list
+                        : []
+                )
+                .map(normalizeQuestion)
+                .filter(Boolean);
+
+        const legacyQuestions =
+            Array.from(
+                document.querySelectorAll(
+                    `[id^="sec-${_activeSubject}-"].content-section .question-card`
+                )
             )
-        );
+                .filter(card =>
+                    !hasQuestionData(
+                        card.closest('.content-section')?.id
+                    )
+                )
+                .map(normalizeQuestion)
+                .filter(Boolean);
+
+        return [
+            ...dataQuestions,
+            ...legacyQuestions
+        ];
     }
 
-    return Array.from(
-        document.querySelectorAll('.question-card')
-    );
+    const dataQuestions =
+        Object.values(window.questionBank)
+            .flatMap(list =>
+                Array.isArray(list)
+                    ? list
+                    : []
+            )
+            .map(normalizeQuestion)
+            .filter(Boolean);
+
+    const dataSectionIds =
+        new Set(
+            Object.keys(window.questionBank)
+        );
+
+    const legacyQuestions =
+        Array.from(
+            document.querySelectorAll('.question-card')
+        )
+            .filter(card =>
+                !dataSectionIds.has(
+                    card.closest('.content-section')?.id
+                )
+            )
+            .map(normalizeQuestion)
+            .filter(Boolean);
+
+    return [
+        ...dataQuestions,
+        ...legacyQuestions
+    ];
 }
 
 function refreshMaxCount() {
@@ -305,12 +526,23 @@ function refreshMaxCount() {
 
 // シャッフル
 function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
+    for (
+        let i = array.length - 1;
+        i > 0;
+        i--
+    ) {
         const j =
-            Math.floor(Math.random() * (i + 1));
+            Math.floor(
+                Math.random() * (i + 1)
+            );
 
-        [array[i], array[j]] =
-            [array[j], array[i]];
+        [
+            array[i],
+            array[j]
+        ] = [
+            array[j],
+            array[i]
+        ];
     }
 
     return array;
@@ -323,7 +555,10 @@ function triggerEngineByContext() {
         getQuestionPool();
 
     if (!pool.length) {
-        alert('選択範囲に有効な問題がありません。');
+        alert(
+            '選択範囲に有効な問題がありません。'
+        );
+
         return;
     }
 
@@ -331,26 +566,20 @@ function triggerEngineByContext() {
         $$id('test-question-count');
 
     let n =
-        input
-            ? parseInt(input.value, 10)
-            : 5;
+    input
+        ? parseInt(input.value, 10)
+        : 5;
 
-    if (!Number.isFinite(n)) {
-        n = 5;
-    }
+if (!Number.isFinite(n) || n < 1 || n > 30) {
+    alert('問題数は1〜30問で入力してください');
+    return;
+}
 
-    n = Math.max(
-        1,
-        Math.min(
-            n,
-            30,
-            pool.length
-        )
-    );
+n = Math.min(n, pool.length);
 
-    if (input) {
-        input.value = n;
-    }
+if (input) {
+    input.value = n;
+}
 
     shuffleArray(pool);
 
@@ -427,11 +656,14 @@ function startTestTimer() {
         $$id('test-timer');
 
     if (timer) {
-        timer.textContent = '⏱️ 00:00';
+        timer.textContent =
+            '⏱️ 00:00';
     }
 
     if (testTimerInterval) {
-        clearInterval(testTimerInterval);
+        clearInterval(
+            testTimerInterval
+        );
     }
 
     testTimerInterval =
@@ -440,7 +672,9 @@ function startTestTimer() {
 
             const m =
                 String(
-                    Math.floor(testSeconds / 60)
+                    Math.floor(
+                        testSeconds / 60
+                    )
                 ).padStart(2, '0');
 
             const s =
@@ -460,7 +694,10 @@ function startTestTimer() {
 
 function stopTestTimer() {
     if (testTimerInterval) {
-        clearInterval(testTimerInterval);
+        clearInterval(
+            testTimerInterval
+        );
+
         testTimerInterval = null;
     }
 }
@@ -480,14 +717,22 @@ function createQuestionSlots() {
         const s =
             document.createElement('div');
 
-        s.className = 'q-slot';
-        s.id = `tslot-${i}`;
-        s.textContent = i + 1;
+        s.className =
+            'q-slot';
 
-        s.addEventListener('click', () => {
-            testIdx = i;
-            showTestQuestion();
-        });
+        s.id =
+            `tslot-${i}`;
+
+        s.textContent =
+            i + 1;
+
+        s.addEventListener(
+            'click',
+            () => {
+                testIdx = i;
+                showTestQuestion();
+            }
+        );
 
         frag.appendChild(s);
     });
@@ -496,9 +741,11 @@ function createQuestionSlots() {
 }
 
 function updateQuestionSlots() {
-    document.querySelectorAll('.q-slot').forEach(s => {
-        s.classList.remove('active');
-    });
+    document
+        .querySelectorAll('.q-slot')
+        .forEach(s => {
+            s.classList.remove('active');
+        });
 
     const cur =
         $$id(`tslot-${testIdx}`);
@@ -524,17 +771,27 @@ function getChoicesForCard(card) {
         return card._choices;
     }
 
+    const q =
+        normalizeQuestion(card);
+
+    if (!q) {
+        return ['わからない'];
+    }
+
     const ans =
-        (card.dataset.ans || '').trim();
+        String(
+            q.answer || ''
+        ).trim();
 
     const wrong =
-        card.dataset.wrong || '';
+        Array.isArray(q.wrong)
+            ? q.wrong
+                .map(s => String(s).trim())
+                .filter(Boolean)
+            : [];
 
     let list =
-        wrong
-            .split('|')
-            .map(s => s.trim())
-            .filter(Boolean);
+        [...wrong];
 
     if (ans) {
         list.push(ans);
@@ -545,7 +802,9 @@ function getChoicesForCard(card) {
 
     shuffleArray(list);
 
-    list.push('わからない');
+    list.push(
+        'わからない'
+    );
 
     card._choices =
         list;
@@ -584,13 +843,14 @@ function showTestQuestion() {
     }
 
     if (qText) {
-        const originalQuestion =
-            card.querySelector('.question-text');
+        const questionHTML =
+            getQuestionField(
+                card,
+                'question'
+            );
 
         qText.innerHTML =
-            originalQuestion
-                ? originalQuestion.innerHTML
-                : '';
+            questionHTML || '';
 
         delete qText.dataset.mjxDone;
 
@@ -625,42 +885,59 @@ function renderChoices(card) {
 
         label.className =
             'choice-label' +
-            (current === text
-                ? ' selected-choice'
-                : '');
+            (
+                current === text
+                    ? ' selected-choice'
+                    : ''
+            );
 
         const radio =
             document.createElement('input');
 
-        radio.type = 'radio';
-        radio.name = 'tcr';
-        radio.value = text;
+        radio.type =
+            'radio';
+
+        radio.name =
+            'tcr';
+
+        radio.value =
+            text;
+
         radio.checked =
             current === text;
 
-        radio.addEventListener('change', () => {
-            userAnswers[testIdx] =
-                text;
+        radio.addEventListener(
+            'change',
+            () => {
+                userAnswers[testIdx] =
+                    text;
 
-            zone
-                .querySelectorAll('.choice-label')
-                .forEach(l => {
-                    l.classList.remove(
-                        'selected-choice'
+                zone
+                    .querySelectorAll(
+                        '.choice-label'
+                    )
+                    .forEach(l => {
+                        l.classList.remove(
+                            'selected-choice'
+                        );
+                    });
+
+                label.classList.add(
+                    'selected-choice'
+                );
+
+                const slot =
+                    $$id(
+                        `tslot-${testIdx}`
                     );
-                });
 
-            label.classList.add(
-                'selected-choice'
-            );
-
-            const slot =
-                $$id(`tslot-${testIdx}`);
-
-            if (slot) {
-                slot.classList.add('filled');
+                if (slot) {
+                    slot.classList.add(
+                        'filled'
+                    );
+                }
             }
-        });
+        );
 
         const span =
             document.createElement('span');
@@ -668,17 +945,28 @@ function renderChoices(card) {
         span.innerHTML =
             text;
 
-        label.appendChild(radio);
-        label.appendChild(span);
+        label.appendChild(
+            radio
+        );
 
-        frag.appendChild(label);
+        label.appendChild(
+            span
+        );
+
+        frag.appendChild(
+            label
+        );
     });
 
-    zone.replaceChildren(frag);
+    zone.replaceChildren(
+        frag
+    );
 
     delete zone.dataset.mjxDone;
 
-    typesetAfterPaint(zone);
+    typesetAfterPaint(
+        zone
+    );
 }
 
 
@@ -704,7 +992,8 @@ function updateNavigationButtons() {
     }
 
     const last =
-        testIdx === testPool.length - 1;
+        testIdx ===
+        testPool.length - 1;
 
     if (next) {
         next.style.display =
@@ -761,15 +1050,18 @@ function finishAndGradeTest() {
         $$id('final-score-area');
 
     if (workspace) {
-        workspace.style.display = 'none';
+        workspace.style.display =
+            'none';
     }
 
     if (hud) {
-        hud.style.display = 'none';
+        hud.style.display =
+            'none';
     }
 
     if (finalArea) {
-        finalArea.style.display = 'block';
+        finalArea.style.display =
+            'block';
     }
 
     const zone =
@@ -784,83 +1076,105 @@ function finishAndGradeTest() {
 
     let correct = 0;
 
-    testPool.forEach((card, i) => {
-        const ans =
-            (card.dataset.ans || '').trim();
+    testPool.forEach(
+        (card, i) => {
+            const ans =
+                String(
+                    getQuestionField(
+                        card,
+                        'answer'
+                    ) || ''
+                ).trim();
 
-        const user =
-            (userAnswers[i] || '').trim();
+            const user =
+                (
+                    userAnswers[i] ||
+                    ''
+                ).trim();
 
-        const ok =
-            ans === user;
+            const ok =
+                ans === user;
 
-        if (ok) {
-            correct++;
+            if (ok) {
+                correct++;
+            }
+
+            const item =
+                document.createElement(
+                    'div'
+                );
+
+            item.className =
+                'review-item';
+
+            item.style.borderLeftColor =
+                ok
+                    ? '#10b981'
+                    : '#ef4444';
+
+            const questionHTML =
+                getQuestionField(
+                    card,
+                    'question'
+                ) || '';
+
+            const answerHTML =
+                getQuestionField(
+                    card,
+                    'explanation'
+                ) || '';
+
+            item.innerHTML = `
+                <div style="display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px;">
+                    <span style="color:#818cf8;">
+                        第 ${i + 1} 問
+                    </span>
+
+                    <span style="color:${ok ? '#10b981' : '#ef4444'}">
+                        ${ok ? '◯ 正解' : '❌ 不正解'}
+                    </span>
+                </div>
+
+                <div style="margin-bottom:14px;font-size:.95rem;">
+                    ${questionHTML}
+                </div>
+
+                <div style="background:#0f172a;padding:11px;border-radius:6px;font-size:.9rem;margin-bottom:10px;border:1px solid #1e293b;">
+                    <div style="margin-bottom:4px;">
+                        あなたの解答:
+                        <span style="color:${ok ? '#10b981' : '#f43f5e'};font-weight:bold;">
+                            ${user || '未解答'}
+                        </span>
+                    </div>
+
+                    <div>
+                        正解の選択肢:
+                        <span style="color:#38bdf8;font-weight:bold;">
+                            ${ans}
+                        </span>
+                    </div>
+                </div>
+
+                <div style="background:#1e293b;padding:14px;border-radius:6px;font-size:.9rem;">
+                    ${answerHTML}
+                </div>
+            `;
+
+            frag.appendChild(
+                item
+            );
         }
+    );
 
-        const item =
-            document.createElement('div');
-
-        item.className =
-            'review-item';
-
-        item.style.borderLeftColor =
-            ok
-                ? '#10b981'
-                : '#ef4444';
-
-        const questionHTML =
-            card.querySelector('.question-text')
-                ?.innerHTML || '';
-
-        const answerHTML =
-            card.querySelector('.answer-box')
-                ?.innerHTML || '';
-
-        item.innerHTML = `
-            <div style="display:flex;justify-content:space-between;font-weight:bold;margin-bottom:10px;">
-                <span style="color:#818cf8;">
-                    第 ${i + 1} 問
-                </span>
-
-                <span style="color:${ok ? '#10b981' : '#ef4444'}">
-                    ${ok ? '◯ 正解' : '❌ 不正解'}
-                </span>
-            </div>
-
-            <div style="margin-bottom:14px;font-size:.95rem;">
-                ${questionHTML}
-            </div>
-
-            <div style="background:#0f172a;padding:11px;border-radius:6px;font-size:.9rem;margin-bottom:10px;border:1px solid #1e293b;">
-                <div style="margin-bottom:4px;">
-                    あなたの解答:
-                    <span style="color:${ok ? '#10b981' : '#f43f5e'};font-weight:bold;">
-                        ${user || '未解答'}
-                    </span>
-                </div>
-
-                <div>
-                    正解の選択肢:
-                    <span style="color:#38bdf8;font-weight:bold;">
-                        ${ans}
-                    </span>
-                </div>
-            </div>
-
-            <div style="background:#1e293b;padding:14px;border-radius:6px;font-size:.9rem;">
-                ${answerHTML}
-            </div>
-        `;
-
-        frag.appendChild(item);
-    });
-
-    zone.replaceChildren(frag);
+    zone.replaceChildren(
+        frag
+    );
 
     delete zone.dataset.mjxDone;
 
-    typesetAfterPaint(zone);
+    typesetAfterPaint(
+        zone
+    );
 
     const pct =
         Math.round(
@@ -871,7 +1185,9 @@ function finishAndGradeTest() {
 
     const fm =
         String(
-            Math.floor(testSeconds / 60)
+            Math.floor(
+                testSeconds / 60
+            )
         ).padStart(2, '0');
 
     const fs =
@@ -880,7 +1196,9 @@ function finishAndGradeTest() {
         ).padStart(2, '0');
 
     const headline =
-        $$id('score-headline-text');
+        $$id(
+            'score-headline-text'
+        );
 
     if (headline) {
         headline.innerHTML = `
@@ -927,38 +1245,47 @@ function resetTestSystem() {
         $$id('final-score-area');
 
     if (mainNav) {
-        mainNav.style.display = 'block';
+        mainNav.style.display =
+            'block';
     }
 
     if (config) {
-        config.style.display = 'flex';
+        config.style.display =
+            'flex';
     }
 
     if (launcher) {
-        launcher.style.display = 'block';
+        launcher.style.display =
+            'block';
     }
 
     if (desc) {
-        desc.style.display = 'block';
+        desc.style.display =
+            'block';
     }
 
     if (hud) {
-        hud.style.display = 'none';
+        hud.style.display =
+            'none';
     }
 
     if (workspace) {
-        workspace.style.display = 'none';
+        workspace.style.display =
+            'none';
     }
 
     if (finalArea) {
-        finalArea.style.display = 'none';
+        finalArea.style.display =
+            'none';
     }
 
     hideAllSections();
     hideAllSubjectFields();
 
     const activeSub =
-        document.querySelector('.subject-btn.active');
+        document.querySelector(
+            '.subject-btn.active'
+        );
 
     if (activeSub) {
         const code =
@@ -976,10 +1303,13 @@ function resetTestSystem() {
         }
 
         const grid =
-            $$id('fields-' + code);
+            $$id(
+                'fields-' + code
+            );
 
         if (grid) {
-            grid.style.display = 'grid';
+            grid.style.display =
+                'grid';
         }
 
         const activeField =
@@ -1009,13 +1339,19 @@ function resetTestSystem() {
                     : null;
 
             if (sec) {
+                renderQuestionSection(
+                    sec
+                );
+
                 sec.style.display =
                     'block';
 
                 _activeSec =
                     sec;
 
-                typesetAfterPaint(sec);
+                typesetAfterPaint(
+                    sec
+                );
             }
         }
     } else {
@@ -1027,16 +1363,39 @@ function resetTestSystem() {
 }
 
 
+// 問題集のデータをDOMへ反映
+function renderAllQuestionSections() {
+    Object.keys(
+        window.questionBank
+    ).forEach(secId => {
+        const sec =
+            $$id(secId);
+
+        if (!sec) return;
+
+        renderQuestionSection(
+            sec
+        );
+    });
+}
+
+
 // 初期化
 function initializeApp() {
     waitForMathJax(() => {
         const initial =
-            $$id('test-master-panel');
+            $$id(
+                'test-master-panel'
+            );
 
         if (initial) {
-            typesetOnce(initial);
+            typesetOnce(
+                initial
+            );
         }
     });
+
+    renderAllQuestionSections();
 
     hideAllSections();
     hideAllSubjectFields();
