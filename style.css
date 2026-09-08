@@ -156,28 +156,15 @@ h1 {
 
 .field-btn {
     background: #0f172a;
-
     border: 1px solid #475569;
-
     color: #cbd5e1;
-
     padding: 11px 8px;
-
     text-align: center;
-
     font-size: .92rem;
     font-weight: bold;
-
     border-radius: 8px;
-
     cursor: pointer;
-
-    transition:
-        border-color .15s ease,
-        color .15s ease,
-        background .15s ease,
-        transform .1s ease;
-
+    transition: none;
     user-select: none;
 }
 
@@ -187,7 +174,8 @@ h1 {
 }
 
 .field-btn:active {
-    transform: scale(.98);
+    /* transform: scale(.98); */
+    transform: none;
 }
 
 .field-btn.active {
